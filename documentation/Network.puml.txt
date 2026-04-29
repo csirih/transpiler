@@ -1,0 +1,30 @@
+@startuml
+
+title Strangler Fig Migration - COBOL to Cloud Native
+
+skinparam backgroundColor #FEFEFE
+
+rectangle "Phase 1\nExtract & Expose" #LightYellow {
+    component "COBOL API Wrapper" as P1A
+    component "DB2 Read Replica" as P1B
+    component "Anti-Corruption Layer" as P1C
+}
+
+rectangle "Phase 2\nParallel Run" #LightBlue {
+    component "New Microservices" as P2A
+    component "Data Sync Layer" as P2B
+    component "Traffic Router\n(10% → 50%)" as P2C
+}
+
+rectangle "Phase 3\nFull Migration" #LightGreen {
+    component "Cloud Native Services" as P3A
+    component "PostgreSQL Primary" as P3B
+    component "Decommission COBOL" as P3C
+}
+
+P1A --> P2C : Route traffic
+P1B --> P2B : Sync data
+P2C --> P3A : Shift 100%
+P2B --> P3B : Cutover
+
+@enduml

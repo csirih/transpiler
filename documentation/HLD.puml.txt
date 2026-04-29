@@ -1,0 +1,150 @@
+@startuml
+title Cash Account Modernization Architecture
+
+!define RECTANGLE class
+
+skinparam backgroundColor #FEFEFE
+
+skinparam component {
+    BackgroundColor #E8F4FD
+    BorderColor #2980B9
+    FontColor #2C3E50
+}
+
+skinparam database {
+    BackgroundColor #FDEBD0
+    BorderColor #E67E22
+}
+
+skinparam cloud {
+    BackgroundColor #EBF5FB
+    BorderColor #1ABC9C
+}
+
+'============ INPUT LAYER ============
+package "Input Layer [chunks]" #FFF9C4 {
+    component [REST API Chunks] as REST
+    component [Event Stream Chunks] as STREAM
+    component [Batch File Chunks] as BATCH
+    component [gRPC Chunks] as GRPC
+}
+
+'============ API GATEWAY ============
+package "API Gateway Layer" #BBDEFB {
+    component [Kong / AWS API Gateway] as APIGW
+    component [Rate Limiter] as RATE
+    component [Auth - OAuth2/JWT] as AUTH
+}
+
+'============ MICROSERVICES ============
+package "Microservices Layer" #C8E6C9 {
+
+    package "Account Service\n(Replaces COBOL Account Processing)" {
+        component [Account Controller] as AC
+        component [Account Business Logic] as ABL
+        component [Account Validator] as AV
+    }
+
+    package "Transaction Service\n(Replaces CICS Transactions)" {
+        component [Transaction Controller] as TC
+        component [Transaction Processor] as TP
+        component [Transaction Validator] as TV
+    }
+
+    package "Workflow Service\n(Replaces JCL Batch Jobs)" {
+        component [Workflow Orchestrator] as WO
+        component [Batch Processor] as BP
+        component [Job Scheduler] as JS
+    }
+
+    package "Validation Service\n(Replaces COBOL Validation)" {
+        component [Rules Engine] as RE
+        component [Schema Validator] as SV
+    }
+}
+
+'============ MESSAGING ============
+package "Event Streaming Layer\n(Replaces VSAM Caching)" #F8BBD0 {
+    component [Apache Kafka] as KAFKA
+    component [Event Bus] as EB
+    component [Dead Letter Queue] as DLQ
+}
+
+'============ CACHE ============
+package "Caching Layer\n(Replaces VSAM)" #E1BEE7 {
+    database "Redis Cache" as REDIS
+    component [Cache Manager] as CM
+}
+
+'============ PERSISTENCE ============
+package "Persistence Layer\n(Replaces DB2 z/OS)" #D7CCC8 {
+    database "PostgreSQL\n(Primary)" as PG
+    database "MongoDB\n(Documents)" as MONGO
+    database "Data Warehouse\n(Snowflake)" as DW
+}
+
+'============ OBSERVABILITY ============
+package "Observability Layer" #F8BBD0 {
+    component [Prometheus + Grafana] as PROM
+    component [ELK Stack] as ELK
+    component [Jaeger Tracing] as JAEGER
+    component [PagerDuty Alerts] as PAGER
+}
+
+'============ INFRASTRUCTURE ============
+package "Infrastructure Layer" #C8E6C9 {
+    component [Kubernetes (EKS/GKE)] as K8S
+    component [Helm Charts] as HELM
+    component [Terraform IaC] as TERRA
+    component [CI/CD - GitHub Actions] as CICD
+}
+
+'============ SECURITY ============
+package "Security Layer" #FFCDD2 {
+    component [Vault - Secrets] as VAULT
+    component [mTLS] as MTLS
+    component [RBAC] as RBAC
+}
+
+'============ RELATIONS ============
+
+REST --> APIGW
+STREAM --> KAFKA
+BATCH --> WO
+GRPC --> APIGW
+
+APIGW --> RATE
+RATE --> AUTH
+AUTH --> AC
+AUTH --> TC
+AUTH --> WO
+
+AC --> KAFKA
+TC --> KAFKA
+WO --> KAFKA
+KAFKA --> DLQ
+
+AC --> CM
+TC --> CM
+CM --> REDIS
+
+ABL --> PG
+TP --> PG
+BP --> MONGO
+WO --> DW
+
+AC --> PROM
+TC --> PROM
+WO --> ELK
+PROM --> PAGER
+
+K8S --> HELM
+HELM --> CICD
+TERRA --> K8S
+
+VAULT --> AC
+VAULT --> TC
+MTLS --> APIGW
+RBAC --> AUTH
+
+@enduml

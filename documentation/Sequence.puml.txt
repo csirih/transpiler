@@ -1,0 +1,44 @@
+@startuml
+skinparam sequenceMessageAlign center
+skinparam backgroundColor #FEFEFE
+
+title Chunk Input Processing Pipeline
+
+participant "Input\\n{chunks}" as INPUT
+participant "Chunk\\nSplitter" as SPLIT
+participant "API\\nGateway" as GW
+participant "Queue\\n(Kafka)" as QUEUE
+participant "Account\\nService" as AS
+participant "Validation\\nService" as VS
+participant "Workflow\\nService" as WS
+participant "PostgreSQL" as DB
+participant "Redis\\nCache" as CACHE
+
+INPUT -> SPLIT : Raw chunks received
+SPLIT -> SPLIT : Parse & normalize chunks
+SPLIT -> GW : Submit chunk batch
+
+loop For each chunk
+    GW -> QUEUE : Publish chunk event
+    QUEUE -> AS : Consume chunk
+    AS -> VS : Validate chunk data
+    VS --> AS : Validation result
+
+    alt Valid Chunk
+        AS -> CACHE : Check cache hit
+        alt Cache Miss
+            AS -> DB : Persist account data
+            DB --> AS : Confirmation
+            AS -> CACHE : Update cache
+        end
+        AS -> WS : Trigger workflow
+        WS --> AS : Workflow status
+    else Invalid Chunk
+        AS -> QUEUE : Route to DLQ
+    end
+end
+
+AS --> GW : Batch response
+GW --> INPUT : Aggregated results
+
+@enduml
