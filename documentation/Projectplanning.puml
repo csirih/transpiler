@@ -1,0 +1,39 @@
+@startuml MigrationStrategy
+
+|Migration Planning|
+start
+:Analyze COBOL Business Logic;
+:Document Current Workflows;
+:Define Service Boundaries;
+
+|Development|
+:Build Core Services;
+:Implement Data Models;
+:Define API Contracts;
+:Develop Event Schemas;
+
+|Testing|
+:Run Unit Tests;
+:Run Integration Tests;
+:Run Performance Tests;
+:Run Security Tests;
+
+|Data Migration|
+:Set Up ETL Pipeline;
+:Migrate Historical Data;
+:Validate Data;
+:Reconcile Data;
+
+|Deployment|
+:Deploy to Staging;
+:Perform Canary Release;
+:Execute Blue-Green Switch;
+:Monitor System & Enable Rollback;
+
+|Decommission|
+:Run in Parallel;
+:Perform Final Validation;
+:Shut Down Legacy System;
+stop
+
+@enduml

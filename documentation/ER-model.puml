@@ -1,0 +1,77 @@
+@startuml
+title Cash Account - Data Model
+
+entity "Accounts" as accounts {
+
+* account_id : UUID <<PK>>
+  --
+  account_number : VARCHAR(20) <<UNIQUE>>
+  customer_id : UUID <<FK>>
+  product_id : UUID <<FK>>
+  status : ENUM
+  currency : CHAR(3)
+  current_balance : DECIMAL(19,4)
+  available_balance : DECIMAL(19,4)
+  overdraft_limit : DECIMAL(19,4)
+  interest_rate : DECIMAL(5,4)
+  opened_at : TIMESTAMP
+  closed_at : TIMESTAMP
+  last_activity_at : TIMESTAMP
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+  }
+
+entity "Transactions" as transactions {
+
+* transaction_id : UUID <<PK>>
+  --
+  account_id : UUID <<FK>>
+  transaction_type : ENUM
+  amount : DECIMAL(19,4)
+  currency : CHAR(3)
+  balance_before : DECIMAL(19,4)
+  balance_after : DECIMAL(19,4)
+  reference_number : VARCHAR(50)
+  description : TEXT
+  status : ENUM
+  posted_at : TIMESTAMP
+  value_at : TIMESTAMP
+  created_at : TIMESTAMP
+  }
+
+entity "Customers" as customers {
+
+* customer_id : UUID <<PK>>
+  --
+  customer_number : VARCHAR(20) <<UNIQUE>>
+  first_name : VARCHAR(100)
+  last_name : VARCHAR(100)
+  email : VARCHAR(255)
+  phone : VARCHAR(20)
+  status : ENUM
+  kyc_status : ENUM
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP
+  }
+
+entity "Products" as products {
+
+* product_id : UUID <<PK>>
+  --
+  product_code : VARCHAR(20) <<UNIQUE>>
+  product_name : VARCHAR(100)
+  product_type : ENUM
+  min_balance : DECIMAL(19,4)
+  interest_rate : DECIMAL(5,4)
+  fees : JSONB
+  features : JSONB
+  is_active : BOOLEAN
+  created_at : TIMESTAMP
+  }
+
+' Relationships
+customers ||--o{ accounts : owns
+products  ||--o{ accounts : defines
+accounts  ||--o{ transactions : records
+
+@enduml

@@ -1,0 +1,154 @@
+@startuml
+title Cash Account System - Modern Architecture
+
+' Color definitions
+!define ENTITY_COLOR #B8E6B8
+!define SERVICE_COLOR #87CEEB
+!define DATA_COLOR #FFE4B5
+!define INFRA_COLOR #DDA0DD
+!define EXTERNAL_COLOR #F0E68C
+
+' Styling
+skinparam rectangle {
+    BorderColor #000000
+    BorderThickness 1
+    BackgroundColor<<entity>> ENTITY_COLOR
+    BackgroundColor<<service>> SERVICE_COLOR
+    BackgroundColor<<data>> DATA_COLOR
+    BackgroundColor<<infra>> INFRA_COLOR
+    BackgroundColor<<external>> EXTERNAL_COLOR
+}
+
+skinparam shadowing false
+
+' =========================
+' External Systems
+' =========================
+rectangle "External Systems" <<external>> {
+    rectangle "Client Applications" as clients
+    rectangle "Banking Partners" as partners
+    rectangle "Regulatory Systems" as regulatory
+}
+
+' =========================
+' API Gateway Layer
+' =========================
+rectangle "API Gateway" <<infra>> {
+    rectangle "Kong / AWS API Gateway" as gateway
+    rectangle "Authentication" as auth
+    rectangle "Rate Limiting" as ratelimit
+}
+
+' =========================
+' Service Mesh
+' =========================
+rectangle "Service Mesh (Istio)" <<infra>> {
+    rectangle "Service Discovery" as discovery
+    rectangle "Load Balancer" as lb
+    rectangle "Circuit Breaker" as circuit
+}
+
+' =========================
+' Microservices
+' =========================
+rectangle "Microservices" <<service>> {
+    rectangle "Account Service\n(FastAPI)" as account_svc
+    rectangle "Transaction Service\n(FastAPI)" as transaction_svc
+    rectangle "Validation Service\n(FastAPI)" as validation_svc
+    rectangle "Workflow Service\n(Celery)" as workflow_svc
+    rectangle "Audit Service\n(FastAPI)" as audit_svc
+}
+
+' =========================
+' Event Streaming
+' =========================
+rectangle "Event Streaming" <<infra>> {
+    rectangle "Apache Kafka" as kafka
+    rectangle "Schema Registry" as schema
+}
+
+' =========================
+' Data Layer
+' =========================
+rectangle "Data Layer" <<data>> {
+    rectangle "PostgreSQL (Primary)" as postgres
+    rectangle "Redis (Cache)" as redis
+    rectangle "MongoDB (Audit Logs)" as mongo
+    rectangle "S3 / MinIO (Documents)" as s3
+}
+
+' =========================
+' Observability
+' =========================
+rectangle "Observability" <<infra>> {
+    rectangle "Prometheus (Metrics)" as prometheus
+    rectangle "Grafana (Dashboards)" as grafana
+    rectangle "ELK Stack (Logs)" as elk
+    rectangle "Jaeger (Tracing)" as jaeger
+}
+
+' =========================
+' Relationships
+' =========================
+
+' External → Gateway
+clients --> gateway
+partners --> gateway
+regulatory --> gateway
+
+' Gateway → Mesh
+gateway --> lb
+gateway --> auth
+gateway --> ratelimit
+
+' Mesh → Services
+lb --> account_svc
+lb --> transaction_svc
+lb --> validation_svc
+lb --> workflow_svc
+lb --> audit_svc
+
+' Service Discovery
+account_svc --> discovery
+transaction_svc --> discovery
+validation_svc --> discovery
+workflow_svc --> discovery
+audit_svc --> discovery
+
+' Data Access
+account_svc --> postgres
+account_svc --> redis
+
+transaction_svc --> postgres
+transaction_svc --> redis
+
+validation_svc --> redis
+
+workflow_svc --> postgres
+workflow_svc --> redis
+
+audit_svc --> mongo
+
+' Event Streaming
+account_svc --> kafka
+transaction_svc --> kafka
+validation_svc --> kafka
+workflow_svc --> kafka
+audit_svc --> kafka
+
+kafka --> workflow_svc
+kafka --> audit_svc
+schema --> kafka
+
+' Observability
+prometheus --> account_svc
+prometheus --> transaction_svc
+prometheus --> validation_svc
+prometheus --> workflow_svc
+prometheus --> audit_svc
+
+grafana --> prometheus
+jaeger --> lb
+elk --> audit_svc
+
+@enduml

@@ -1,0 +1,57 @@
+@startuml
+title Account Service - Component Architecture
+
+package "Account Service" {
+
+package "API Layer" {
+[REST Controllers]
+[GraphQL Resolvers]
+[WebSocket Handlers]
+}
+
+package "Business Logic" {
+[Account Manager]
+[Balance Calculator]
+[Interest Engine]
+[Fee Processor]
+}
+
+package "Domain Layer" {
+[Account Entity]
+[Transaction Entity]
+[Customer Entity]
+[Product Entity]
+}
+
+package "Infrastructure" {
+[Repository]
+[Unit of Work]
+[Event Publisher]
+[Cache Manager]
+}
+
+database "PostgreSQL" as DB
+database "Redis Cache" as Cache
+queue "Kafka Topics" as Events
+
+' API → Business
+[REST Controllers] --> [Account Manager]
+[GraphQL Resolvers] --> [Account Manager]
+[WebSocket Handlers] --> [Account Manager]
+
+' Business → Internal Services
+[Account Manager] --> [Balance Calculator]
+[Account Manager] --> [Interest Engine]
+[Account Manager] --> [Fee Processor]
+
+' Business → Infrastructure
+[Account Manager] --> [Repository]
+[Account Manager] --> [Unit of Work]
+
+' Infrastructure → External Systems
+[Repository] --> DB
+[Cache Manager] --> Cache
+[Event Publisher] --> Events
+}
+
+@enduml
