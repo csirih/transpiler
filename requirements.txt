@@ -1,5 +1,14 @@
 langchain
 langchain-community
 langchain-text-splitters
-fastapi[standard]
-jinja2
+fastmcp
+langgraph-checkpoint-SQLite
+a2a-sdk
+keybert
+aiosqlite
+chromadb
+langchain-chroma
+langchain-anthropic
+langchain-core
+langchain
+langgraph-checkpoint-sqlite
